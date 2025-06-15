@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         AWS_REGION = 'us-east-1'
-        S3_BUCKET = 'lambda-artifacts-imageproject-kishore' // Change to your actual S3 bucket
         STACK_NAME = 'serverlessimage'
     }
 
@@ -26,29 +25,43 @@ pipeline {
             }
         }
 
-        stage('Create S3 Bucket if not exists') {
-            steps {
-                sh '''
-                if ! aws s3 ls "s3://$S3_BUCKET" --region $AWS_REGION 2>&1 | grep -q 'NoSuchBucket'; then
-                    echo "Bucket already exists"
-                else
-                    echo "Creating bucket $S3_BUCKET"
-                    aws s3 mb s3://$S3_BUCKET --region $AWS_REGION
-                fi
-                '''
-            }
-        }
-
-        stage('Upload to S3') {
-            steps {
-                sh '''
-                aws s3 cp upload_handler.zip s3://$S3_BUCKET/upload_handler.zip --region $AWS_REGION
-                aws s3 cp image_processor.zip s3://$S3_BUCKET/image_processor.zip --region $AWS_REGION
-                '''
-            }
-        }
-
         stage('Deploy CloudFormation Stack') {
+            steps {
+                sh '''
+                aws cloudformation deploy \
+                  --template-file cloudformation/T1.yaml \
+                  --stack-name $STACK_NAME \
+                  --capabilities CAPABILITY_NAMED_IAM \
+                  --region $AWS_REGION
+                '''
+            }
+        }
+
+        stage('Upload Lambda Code to S3') {
+            steps {
+                script {
+                    def bucketName = sh(
+                        script: """
+                        aws cloudformation describe-stacks \
+                          --stack-name $STACK_NAME \
+                          --query "Stacks[0].Outputs[?OutputKey=='S3Bucket'].OutputValue" \
+                          --output text \
+                          --region $AWS_REGION
+                        """,
+                        returnStdout: true
+                    ).trim()
+
+                    env.S3_BUCKET = bucketName
+
+                    sh """
+                    aws s3 cp upload_handler.zip s3://$S3_BUCKET/upload_handler.zip --region $AWS_REGION
+                    aws s3 cp image_processor.zip s3://$S3_BUCKET/image_processor.zip --region $AWS_REGION
+                    """
+                }
+            }
+        }
+
+        stage('Redeploy Stack to Update Lambda Code') {
             steps {
                 sh '''
                 aws cloudformation deploy \
