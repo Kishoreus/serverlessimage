@@ -20,10 +20,9 @@ pipeline {
                 script {
                     // Zip upload_handler Lambda
                     sh '''
-                    cd lambdas/upload_handler
-                    zip -r ../../upload_handler.zip .
-                    cd ../image_processor
-                    zip -r ../../image_processor.zip .
+                    cd lambdas
+                    zip -r ../upload_handler.zip .
+                    zip -r ../image_processor.zip .
                     '''
                 }
             }
