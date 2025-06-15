@@ -1,14 +1,9 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Full Serverless Image Upload and Processing Stack
 
-Parameters:
-  LambdaCodeBucket:
-    Type: String
-    Description: S3 bucket where the Lambda zip files are stored
-
 Resources:
 
-  ### S3 Bucket ###
+  ### S3 Bucket for Lambda Artifacts and Uploads ###
   ImageUploadBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -46,7 +41,7 @@ Resources:
       Runtime: python3.10
       Role: !GetAtt LambdaExecutionRole.Arn
       Code:
-        S3Bucket: !Ref LambdaCodeBucket
+        S3Bucket: !Ref ImageUploadBucket
         S3Key: upload_handler.zip
       Environment:
         Variables:
@@ -61,7 +56,7 @@ Resources:
       Runtime: python3.10
       Role: !GetAtt LambdaExecutionRole.Arn
       Code:
-        S3Bucket: !Ref LambdaCodeBucket
+        S3Bucket: !Ref ImageUploadBucket
         S3Key: image_processor.zip
       Environment:
         Variables:
@@ -102,7 +97,7 @@ Resources:
 
 Outputs:
   S3Bucket:
-    Description: Bucket for uploading images
+    Description: Bucket for uploading images and storing Lambda code
     Value: !Ref ImageUploadBucket
 
   UploadLambdaFunction:
