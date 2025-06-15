@@ -40,7 +40,7 @@ Resources:
         S3Key: upload_handler.zip
       Environment:
         Variables:
-          BUCKET_NAME: !Ref ImageUploadBucket
+          UPLOAD_BUCKET: !Ref ImageUploadBucket
 
   ImageProcessor:
     Type: AWS::Lambda::Function
@@ -54,7 +54,7 @@ Resources:
         S3Key: image_processor.zip
       Environment:
         Variables:
-          BUCKET_NAME: !Ref ImageUploadBucket
+          UPLOAD_BUCKET: !Ref ImageUploadBucket
 
   ImageUploadApi:
     Type: AWS::ApiGateway::RestApi
