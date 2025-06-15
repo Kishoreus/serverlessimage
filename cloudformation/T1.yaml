@@ -6,8 +6,6 @@ Resources:
   ### S3 Bucket for Lambda Artifacts and Uploads ###
   ImageUploadBucket:
     Type: AWS::S3::Bucket
-    Properties:
-      BucketName: lambda-artifacts-imageproject-kishore-{{random suffix}}
 
   ### IAM Role for Lambda ###
   LambdaExecutionRole:
