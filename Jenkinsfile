@@ -1,27 +1,13 @@
-stage('Create S3 Bucket if not exists') {
-    steps {
-        sh '''
-        if ! aws s3 ls "s3://$S3_BUCKET" --region $AWS_REGION 2>&1 | grep -q 'NoSuchBucket'; then
-          echo "Bucket already exists"
-        else
-          echo "Creating bucket $S3_BUCKET"
-          aws s3 mb s3://$S3_BUCKET --region $AWS_REGION
-        fi
-        '''
-    }
-}
-
 pipeline {
     agent any
 
     environment {
         AWS_REGION = 'us-east-1'
-        S3_BUCKET = 'lambda-artifacts-imageproject-kishore'          // Change to your actual S3 bucket
+        S3_BUCKET = 'lambda-artifacts-imageproject-kishore' // Change to your actual S3 bucket
         STACK_NAME = 'serverlessimage'
     }
 
     stages {
-
         stage('Clone Repository') {
             steps {
                 git url: 'https://github.com/Kishoreus/serverlessimage.git', branch: 'main'
@@ -31,7 +17,6 @@ pipeline {
         stage('Package Lambda Functions') {
             steps {
                 script {
-                    // Zip upload_handler Lambda
                     sh '''
                     cd lambdas
                     zip -r ../upload_handler.zip .
@@ -44,15 +29,16 @@ pipeline {
         stage('Create S3 Bucket if not exists') {
             steps {
                 sh '''
-                 if ! aws s3 ls "s3://$S3_BUCKET" --region $AWS_REGION 2>&1 | grep -q 'NoSuchBucket'; then
+                if ! aws s3 ls "s3://$S3_BUCKET" --region $AWS_REGION 2>&1 | grep -q 'NoSuchBucket'; then
                     echo "Bucket already exists"
-                 else
+                else
                     echo "Creating bucket $S3_BUCKET"
                     aws s3 mb s3://$S3_BUCKET --region $AWS_REGION
-                 fi
-                 '''
+                fi
+                '''
             }
         }
+
         stage('Upload to S3') {
             steps {
                 sh '''
@@ -73,7 +59,6 @@ pipeline {
                 '''
             }
         }
-
     }
 
     post {
@@ -85,4 +70,3 @@ pipeline {
         }
     }
 }
-
