@@ -91,7 +91,7 @@ Resources:
       FunctionName: !Ref UploadHandler
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ImageUploadApi}/*/POST/upload
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ImageUploadApi}/*/*/*
 
 Outputs:
 
