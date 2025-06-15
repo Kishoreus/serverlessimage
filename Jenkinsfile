@@ -4,6 +4,8 @@ pipeline {
     environment {
         AWS_REGION = 'us-east-1'
         STACK_NAME = 'serverlessimage'
+        BASE_TEMPLATE = 'cloudformation/T1_base.yaml'
+        FULL_TEMPLATE = 'cloudformation/T1.yaml'
     }
 
     stages {
@@ -15,21 +17,19 @@ pipeline {
 
         stage('Package Lambda Functions') {
             steps {
-                script {
-                    sh '''
-                    cd lambdas
-                    zip -r ../upload_handler.zip .
-                    zip -r ../image_processor.zip .
-                    '''
-                }
+                sh '''
+                cd lambdas
+                zip -r ../upload_handler.zip upload_handler.py
+                zip -r ../image_processor.zip image_processor.py
+                '''
             }
         }
 
-        stage('Deploy CloudFormation Stack') {
+        stage('Deploy Initial Stack (Create Bucket + IAM)') {
             steps {
                 sh '''
                 aws cloudformation deploy \
-                  --template-file cloudformation/T1.yaml \
+                  --template-file $BASE_TEMPLATE \
                   --stack-name $STACK_NAME \
                   --capabilities CAPABILITY_NAMED_IAM \
                   --region $AWS_REGION
@@ -61,11 +61,11 @@ pipeline {
             }
         }
 
-        stage('Redeploy Stack to Update Lambda Code') {
+        stage('Deploy Full Stack (Lambdas + API Gateway)') {
             steps {
                 sh '''
                 aws cloudformation deploy \
-                  --template-file cloudformation/T1.yaml \
+                  --template-file $FULL_TEMPLATE \
                   --stack-name $STACK_NAME \
                   --capabilities CAPABILITY_NAMED_IAM \
                   --region $AWS_REGION
@@ -76,7 +76,7 @@ pipeline {
 
     post {
         success {
-            echo 'Deployment succeeded.'
+            echo 'Full deployment succeeded.'
         }
         failure {
             echo 'Deployment failed.'
