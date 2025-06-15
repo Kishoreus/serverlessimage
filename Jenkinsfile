@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         AWS_REGION = 'us-east-1'
-        S3_BUCKET = 'lambda-code-bucket'          // Change to your actual S3 bucket
+        S3_BUCKET = 'lambda-artifacts-imageproject-kishore'          // Change to your actual S3 bucket
         STACK_NAME = 'serverlessimage'
     }
 
