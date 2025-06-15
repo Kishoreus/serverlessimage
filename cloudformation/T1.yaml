@@ -109,3 +109,9 @@ Outputs:
   ApiInvokeURL:
     Description: "Invoke URL for uploading image"
     Value: !Sub "https://${ImageUploadApi}.execute-api.${AWS::Region}.amazonaws.com/dev/upload"
+    
+  ApiUrl:
+    Description: "API Gateway endpoint"
+    Value: !Sub "https://${ServerlessApi}.execute-api.${AWS::Region}.amazonaws.com/dev/upload"
+    Export:
+      Name: ApiUrl
