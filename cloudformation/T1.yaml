@@ -94,6 +94,7 @@ Resources:
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ImageUploadApi}/*/POST/upload
 
 Outputs:
+
   S3Bucket:
     Description: Bucket for uploading images and storing Lambda code
     Value: !Ref ImageUploadBucket
@@ -109,9 +110,9 @@ Outputs:
   ApiInvokeURL:
     Description: "Invoke URL for uploading image"
     Value: !Sub "https://${ImageUploadApi}.execute-api.${AWS::Region}.amazonaws.com/dev/upload"
-    
+
   ApiUrl:
     Description: "API Gateway endpoint"
-    Value: !Sub "https://${ServerlessApi}.execute-api.${AWS::Region}.amazonaws.com/dev/upload"
+    Value: !Sub "https://${ImageUploadApi}.execute-api.${AWS::Region}.amazonaws.com/dev/upload"
     Export:
       Name: ApiUrl
