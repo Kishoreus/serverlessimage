@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Base stack to create S3 bucket and IAM role
+
+Resources:
+
+  ### S3 Bucket for Lambda Artifacts and Uploads ###
+  ImageUploadBucket:
+    Type: AWS::S3::Bucket
+
+  ### IAM Role for Lambda ###
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LambdaExecutionRoleImageProject
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaBasicPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:*
+                  - s3:*
+                Resource: "*"
+
+Outputs:
+  S3Bucket:
+    Description: Bucket for uploading images and storing Lambda code
+    Value: !Ref ImageUploadBucket
