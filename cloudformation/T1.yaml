@@ -3,11 +3,9 @@ Description: Full Serverless Image Upload and Processing Stack
 
 Resources:
 
-  ### S3 Bucket for Lambda Artifacts and Uploads ###
   ImageUploadBucket:
     Type: AWS::S3::Bucket
 
-  ### IAM Role for Lambda ###
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -30,7 +28,6 @@ Resources:
                   - s3:*
                 Resource: "*"
 
-  ### Lambda: Upload Handler ###
   UploadHandler:
     Type: AWS::Lambda::Function
     Properties:
@@ -45,7 +42,6 @@ Resources:
         Variables:
           BUCKET_NAME: !Ref ImageUploadBucket
 
-  ### Lambda: Image Processor ###
   ImageProcessor:
     Type: AWS::Lambda::Function
     Properties:
@@ -60,7 +56,6 @@ Resources:
         Variables:
           BUCKET_NAME: !Ref ImageUploadBucket
 
-  ### API Gateway ###
   ImageUploadApi:
     Type: AWS::ApiGateway::RestApi
     Properties:
@@ -85,7 +80,6 @@ Resources:
         Type: AWS_PROXY
         Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UploadHandler.Arn}/invocations
 
-  ### Lambda Permission for API Gateway ###
   LambdaApiPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -94,20 +88,12 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ImageUploadApi}/*/*/*
 
-  ### Deployment and Stage (required for API Gateway to work) ###
   ApiDeployment:
     Type: AWS::ApiGateway::Deployment
     DependsOn: UploadMethod
     Properties:
       RestApiId: !Ref ImageUploadApi
       StageName: dev
-
-  ApiStage:
-    Type: AWS::ApiGateway::Stage
-    Properties:
-      RestApiId: !Ref ImageUploadApi
-      StageName: dev
-      DeploymentId: !Ref ApiDeployment
 
 Outputs:
 
