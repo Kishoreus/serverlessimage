@@ -1,3 +1,16 @@
+stage('Create S3 Bucket if not exists') {
+    steps {
+        sh '''
+        if ! aws s3 ls "s3://$S3_BUCKET" --region $AWS_REGION 2>&1 | grep -q 'NoSuchBucket'; then
+          echo "Bucket already exists"
+        else
+          echo "Creating bucket $S3_BUCKET"
+          aws s3 mb s3://$S3_BUCKET --region $AWS_REGION
+        fi
+        '''
+    }
+}
+
 pipeline {
     agent any
 
@@ -28,6 +41,18 @@ pipeline {
             }
         }
 
+        stage('Create S3 Bucket if not exists') {
+            steps {
+                sh '''
+                 if ! aws s3 ls "s3://$S3_BUCKET" --region $AWS_REGION 2>&1 | grep -q 'NoSuchBucket'; then
+                    echo "Bucket already exists"
+                 else
+                    echo "Creating bucket $S3_BUCKET"
+                    aws s3 mb s3://$S3_BUCKET --region $AWS_REGION
+                 fi
+                 '''
+            }
+        }
         stage('Upload to S3') {
             steps {
                 sh '''
@@ -60,3 +85,4 @@ pipeline {
         }
     }
 }
+
