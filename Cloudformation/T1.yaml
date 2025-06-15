@@ -12,7 +12,7 @@ Resources:
   ImageUploadBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: serverless-image-upload-dev
+      BucketName: lambda-artifacts-imageproject-kishore
 
   ### IAM Role for Lambda ###
   LambdaExecutionRole:
