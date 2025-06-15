@@ -1,0 +1,118 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Full Serverless Image Upload and Processing Stack
+
+Parameters:
+  LambdaCodeBucket:
+    Type: String
+    Description: S3 bucket where the Lambda zip files are stored
+
+Resources:
+
+  ### S3 Bucket ###
+  ImageUploadBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: serverless-image-upload-dev
+
+  ### IAM Role for Lambda ###
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LambdaExecutionRoleImageProject
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaBasicPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:*
+                  - s3:*
+                Resource: "*"
+
+  ### Lambda: Upload Handler ###
+  UploadHandler:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: UploadHandlerFunction
+      Handler: upload_handler.lambda_handler
+      Runtime: python3.10
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: upload_handler.zip
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref ImageUploadBucket
+
+  ### Lambda: Image Processor ###
+  ImageProcessor:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: ImageProcessorFunction
+      Handler: image_processor.lambda_handler
+      Runtime: python3.10
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: image_processor.zip
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref ImageUploadBucket
+
+  ### API Gateway ###
+  ImageUploadApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: ImageUploadAPI
+
+  UploadResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ImageUploadApi
+      ParentId: !GetAtt ImageUploadApi.RootResourceId
+      PathPart: upload
+
+  UploadMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      HttpMethod: POST
+      ResourceId: !Ref UploadResource
+      RestApiId: !Ref ImageUploadApi
+      AuthorizationType: NONE
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UploadHandler.Arn}/invocations
+
+  LambdaApiPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref UploadHandler
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ImageUploadApi}/*/POST/upload
+
+Outputs:
+  S3Bucket:
+    Description: Bucket for uploading images
+    Value: !Ref ImageUploadBucket
+
+  UploadLambdaFunction:
+    Description: Lambda for uploading image
+    Value: !Ref UploadHandler
+
+  ImageProcessorFunction:
+    Description: Lambda for processing image
+    Value: !Ref ImageProcessor
+
+  ApiInvokeURL:
+    Description: "Invoke URL for uploading image"
+    Value: !Sub "https://${ImageUploadApi}.execute-api.${AWS::Region}.amazonaws.com/dev/upload"
